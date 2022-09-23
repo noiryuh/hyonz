@@ -8,10 +8,14 @@ const Allocator = std.mem.Allocator;
 //==============================================
 
 /// A standard (rfc4868) lower-case codec
-pub const standard_lower = Codec(.{ .alphabet = "0123456789abcdef".* });
+pub const standard_lower = Codec(.{
+    .alphabet = "0123456789abcdef".*,
+});
 
 /// A standard (rfc4868) upper-case codec
-pub const standard_upper = Codec(.{ .alphabet = "0123456789ABCDEF".* });
+pub const standard_upper = Codec(.{
+    .alphabet = "0123456789ABCDEF".*,
+});
 
 //==============================================
 // Codec implementation
@@ -23,10 +27,12 @@ pub const CodecOptions = struct {
 
 pub fn Codec(comptime codec_options: CodecOptions) type {
     return struct {
-        pub const alphabet = codec_options.alphabet;
-
-        pub const Encoder = EncoderAdvanced(.{ .alphabet = alphabet });
-        pub const Decoder = DecoderAdvanced(.{ .alphabet = alphabet });
+        pub const Encoder = EncoderAdvanced(.{
+            .alphabet = codec_options.alphabet,
+        });
+        pub const Decoder = DecoderAdvanced(.{
+            .alphabet = codec_options.alphabet,
+        });
     };
 }
 
@@ -39,7 +45,17 @@ pub const EncoderOptions = struct {
 };
 
 pub fn EncoderAdvanced(comptime encoder_options: EncoderOptions) type {
-    validateAlphabet(encoder_options.alphabet);
+    { // validate options
+        var char_in_alphabet = [_]bool{false} ** 256;
+        for (encoder_options.alphabet) |c| {
+            // For ignore-case purpose, turn char to lower-case
+            const lower_char = ascii.toLower(c);
+            if (char_in_alphabet[lower_char]) {
+                @compileError("alphabet contains duplicated character '" ++ [_]u8{c} ++ "'");
+            }
+            char_in_alphabet[lower_char] = true;
+        }
+    }
     const alphabet = encoder_options.alphabet;
 
     return struct {
@@ -102,7 +118,17 @@ pub const DecoderOptions = struct {
 };
 
 pub fn DecoderAdvanced(comptime decoder_options: DecoderOptions) type {
-    validateAlphabet(decoder_options.alphabet);
+    { // validate options
+        var char_in_alphabet = [_]bool{false} ** 256;
+        for (decoder_options.alphabet) |c| {
+            // For ignore-case purpose, turn char to lower-case
+            const lower_char = ascii.toLower(c);
+            if (char_in_alphabet[lower_char]) {
+                @compileError("alphabet contains duplicated character '" ++ [_]u8{c} ++ "'");
+            }
+            char_in_alphabet[lower_char] = true;
+        }
+    }
     const alphabet = decoder_options.alphabet;
 
     return struct {
@@ -223,23 +249,6 @@ pub fn DecoderAdvanced(comptime decoder_options: DecoderOptions) type {
             };
         }
     };
-}
-
-//==============================================
-// Helper functions
-//==============================================
-
-fn validateAlphabet(comptime alphabet: [16]u8) void {
-    var char_in_alphabet = [_]bool{false} ** 256;
-    for (alphabet) |c| {
-        // For ignore-case purpose, turn char to lower-case
-        const lower_char = ascii.toLower(c);
-
-        if (char_in_alphabet[lower_char]) {
-            @compileError("alphabet cannot have same character '" ++ [_]u8{c} ++ "' regardless of case");
-        }
-        char_in_alphabet[lower_char] = true;
-    }
 }
 
 //==============================================
