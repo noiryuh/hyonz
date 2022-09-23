@@ -25,6 +25,6 @@ const base16 = hyonz.base16;
 
 pub fn main() !void {
     const x = base16.standard_upper.Encoder.encodeComptime("!?");
-    _ = x;
+    _ = x; // x == "213F"
 }
 ```
