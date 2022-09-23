@@ -21,9 +21,9 @@ pub const CodecOptions = struct {
     alphabet: [16]u8,
 };
 
-pub fn Codec(comptime options: CodecOptions) type {
+pub fn Codec(comptime codec_options: CodecOptions) type {
     return struct {
-        pub const alphabet = options.alphabet;
+        pub const alphabet = codec_options.alphabet;
 
         pub const Encoder = EncoderAdvanced(.{ .alphabet = alphabet });
         pub const Decoder = DecoderAdvanced(.{ .alphabet = alphabet });
